@@ -127,7 +127,8 @@
             [retValues setObject:strEncoded forKey:@"data"];
         }
         else {
-            [retValues setObject:[asset valueForProperty:ALAssetPropertyAssetURL] forKey:@"data"];
+            //[retValues setObject:[asset valueForProperty:ALAssetPropertyAssetURL] forKey:@"data"];
+            [retValues setObject:strUrl forKey:@"data"];
         }
         
         [retArray addObject:retValues];
