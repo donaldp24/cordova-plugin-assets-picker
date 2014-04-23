@@ -245,7 +245,76 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
  }
 ```
 
-## Examples
+## Full Example
+```html
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" type="text/css" href="css/index.css" />
+        <title>Assets Picker Plugin</title>
+    </head>
+    <body>
+        <input type="button" value="Pick" onclick="onPick()" />
+        <input type="button" value="Clear" onclick="onClear()" />
+        <table id="imagetable">
+        </table>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+        <script type="text/javascript">
+            app.initialize();
+        </script>
+		<script type="text/javascript">
+			var selectedAssets = new Array();
+			// called when "pick" button is clicked
+			function onPick()
+			{
+				var options = {
+					quality: 75,
+					destinationType: Camera.DestinationType.DATA_URL,
+					encodingType: Camera.EncodingType.JPEG,
+					selectedAssets: selectedAssets
+				};
+				navigator.camera.getPicture(onSuccess, onFailure, options);
+			}
+
+			// called when "clear" button is clicked
+			function onClear()
+			{
+				selectedAssets = new Array();
+				document.getElementById("imagetable").innerHTML = "";
+			}
+
+			// success callback
+			function onSuccess(dataArray)
+			{
+				selectedAssets = dataArray;
+				var strTr = "";
+				for (i = 0; i < selectedAssets.length; i++)
+				{
+					strTr += "<tr><td><img id='img" + i + "' /></td></tr>";
+				}
+				document.getElementById("imagetable").innerHTML = strTr;
+				for (i = 0; i < selectedAssets.length; i++)
+				{
+					var obj = selectedAssets[i];
+					var image = document.getElementById("img"+i);
+					image.src = "data:image/jpeg;base64," + obj.data;
+				}
+			}
+
+			// cancel callback
+			function onFailure(message)
+			{
+				//alert(message);
+			}
+		</script>
+    </body>
+</html>
+```
 
 ## Contributing
 
