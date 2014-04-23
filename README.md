@@ -88,6 +88,19 @@ The data of image is one of the following formats, depending on the options you 
 - A String containing the Base64 encoded photo image.
 - A String representing the image file location on local storage (default).
 
+#### Example
+```javascript
+function onPick()
+{
+	var options = {
+        quality: 75,
+        destinationType: Camera.DestinationType.DATA_URL,
+        encodingType: Camera.EncodingType.JPEG
+    };
+    navigator.camera.getPicture(onSuccess, onFailure, options);
+}
+```
+
 ### onSuccess
 onSuccess callback function that provides the selected images.
 ```javascript
@@ -102,6 +115,128 @@ function(dataArray) {
 id : identifier,	// unique identifier string of the image
 data : imageData	// image data, Base64 encoding of the image data, OR the image file URI, depending on options used. (String)
 };
+```
+
+#### Example
+```javascript
+// Show image
+//
+function onSuccess(dataArray) {
+    for (i = 0; i <= dataArray.length; i++) {
+         var item = dataArray[i];
+         var imageId = item.id;
+         var image = document.getElementById('myImage' + i);
+         image.src = "data:image/jpeg;base64," + item.data;
+    }
+}
+```
+
+
+### onCancel
+onCancel callback function that provides a cancel or error message.
+```javascript
+function(message) {
+    // Show a helpful message
+}
+```
+#### Parameters
+- message: The message is provided by the device. (String)
+
+
+### options
+Optional parameters to customize the settings.
+```javascript
+{ quality : 75, 
+  destinationType : Camera.DestinationType.DATA_URL, 
+  sourceType : Camera.PictureSourceType.CAMERA, 
+  allowEdit : true,
+  encodingType: Camera.EncodingType.JPEG,
+  targetWidth: 100,
+  targetHeight: 100,
+  popoverOptions: CameraPopoverOptions,
+  saveToPhotoAlbum: false,
+  scrollToDate: new Date(),
+  selectedAssets: dataArray	};
+```
+
+- quality: Quality of saved image. Range is [0, 100]. (Number)
+- destinationType: Choose the format of the return value. Defined in navigator.camera.DestinationType (Number)
+```javascript
+    Camera.DestinationType = {
+        DATA_URL : 0,                // Return image as base64 encoded string
+        FILE_URI : 1                 // Return image file URI
+    };
+```
+- sourceType: Set the source of the picture. Defined in nagivator.camera.PictureSourceType (Number)
+```javascript
+Camera.PictureSourceType = {
+    PHOTOLIBRARY : 0,
+    CAMERA : 1,
+    SAVEDPHOTOALBUM : 2
+};
+```
+- allowEdit: Allow simple editing of image before selection. (Boolean)
+- encodingType: Choose the encoding of the returned image file. Defined in navigator.camera.EncodingType (Number)
+```javascript
+    Camera.EncodingType = {
+        JPEG : 0,               // Return JPEG encoded image
+        PNG : 1                 // Return PNG encoded image
+    };
+```
+- targetWidth: Width in pixels to scale image. Must be used with targetHeight. Aspect ratio is maintained. (Number)
+- targetHeight: Height in pixels to scale image. Must be used with targetWidth. Aspect ratio is maintained. (Number)
+- mediaType: Set the type of media to select from. Only works when PictureSourceType is PHOTOLIBRARY or SAVEDPHOTOALBUM. Defined in nagivator.camera.MediaType (Number)
+```javascript
+Camera.MediaType = { 
+    PICTURE: 0,             // allow selection of still pictures only. DEFAULT. Will return format specified via DestinationType
+    VIDEO: 1,               // allow selection of video only, WILL ALWAYS RETURN FILE_URI
+    ALLMEDIA : 2            // allow selection from all media types
+};
+```
+- correctOrientation: Rotate the image to correct for the orientation of the device during capture. (Boolean)
+- saveToPhotoAlbum: Save the image to the photo album on the device after capture. (Boolean)
+- popoverOptions: iOS only options to specify popover location in iPad. Defined in CameraPopoverOptions
+#### CameraPopoverOptions
+Parameters only used by iOS to specify the anchor element location and arrow direction of popover used on iPad when selecting images from the library or album.
+```javascript
+{ x : 0, 
+  y :  32,
+  width : 320,
+  height : 480,
+  arrowDir : Camera.PopoverArrowDirection.ARROW_ANY
+};
+```
+
+- x: x pixel coordinate of element on the screen to anchor popover onto. (Number)
+- y: y pixel coordinate of element on the screen to anchor popover onto. (Number)
+- width: width, in pixels, of the element on the screen to anchor popover onto. (Number)
+- height: height, in pixels, of the element on the screen to anchor popover onto. (Number)
+- arrowDir: Direction the arrow on the popover should point. Defined in Camera.PopoverArrowDirection (Number)
+```javascript
+    Camera.PopoverArrowDirection = {
+        ARROW_UP : 1,        // matches iOS UIPopoverArrowDirection constants
+        ARROW_DOWN : 2,
+        ARROW_LEFT : 4,
+        ARROW_RIGHT : 8,
+        ARROW_ANY : 15
+    };
+```
+**Note:** The size of the popover may change to adjust to the direction of the arrow and orientation of the screen. Make sure to account for orientation changes when specifying the anchor element location.
+#### Example
+```javascript
+ var popover = new CameraPopoverOptions(300,300,100,100,Camera.PopoverArrowDirection.ARROW_ANY);
+ var options = { quality: 50, destinationType: Camera.DestinationType.DATA_URL,sourceType: Camera.PictureSource.SAVEDPHOTOALBUM, popoverOptions : popover };
+
+ navigator.camera.getPicture(onSuccess, onCancel, options);
+
+ function onSuccess(imageData) {
+    var image = document.getElementById('myImage');
+    image.src = "data:image/jpeg;base64," + imageData;
+}
+
+function onCancel(message) {
+    alert('Failed because: ' + message);
+}
 ```
 
 ## Examples
@@ -121,5 +256,10 @@ This software is released under the [Apache 2.0 License][apache2_license].
 
 © 2013-2014 appPlant UG, Inc. All rights reserved
 
-
-[onsucces]: #onSuccess
+[cordova]: https://cordova.apache.org
+[onsuccess]: #onSuccess
+[oncancel]: #onCancel
+[options]: #options
+[CLI]: http://cordova.apache.org/docs/en/3.0.0/guide_cli_index.md.html#The%20Command-line%20Interface
+[PGB]: http://docs.build.phonegap.com/en_US/3.3.0/index.html
+[apache2_license]: http://opensource.org/licenses/Apache-2.0
