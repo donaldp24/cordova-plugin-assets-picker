@@ -1,7 +1,7 @@
 cordova-plugin-assets-picker
 ============================
 
-Phonegap Assets Picker Plugin, supports multiple selection of photos from album.
+Phonegap Assets Picker Plugin, supports multiple selection of photos from album using [CTAssetsPickerController][ctassetspickercontroller].
 
 ### Plugin's Purpose
 The purpose of the plugin is to create a fast and reliable view of photos on the mobile phones.
@@ -195,6 +195,8 @@ Camera.MediaType = {
 ```
 - correctOrientation: Rotate the image to correct for the orientation of the device during capture. (Boolean)
 - saveToPhotoAlbum: Save the image to the photo album on the device after capture. (Boolean)
+- scrollToDate: Scroll to indicated date when open photo chooser dialog.
+- selectedAssets: Array of selected images, select these images when open photo chooser dialog. Selected images was returned [onSuccess][onsuccess] callback. 
 - popoverOptions: iOS only options to specify popover location in iPad. Defined in CameraPopoverOptions.
 
 #### CameraPopoverOptions
@@ -331,6 +333,7 @@ This software is released under the [Apache 2.0 License][apache2_license].
 
 © 2013-2014 appPlant UG, Inc. All rights reserved
 
+[ctassetspickercontroller]: https://github.com/chiunam/CTAssetsPickerController
 [cordova]: https://cordova.apache.org
 [onsuccess]: #onSuccess
 [oncancel]: #onCancel

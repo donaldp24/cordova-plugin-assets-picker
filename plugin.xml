@@ -19,6 +19,7 @@
 
     <js-module src="www/assets-picker.js" name="AssetsPickerPlugin">
         <clobbers target="navigator.camera" />
+		<clobbers target="Camera" />
     </js-module>
 
     <!-- ios -->
