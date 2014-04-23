@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="de.appplant.cordova.plugin.local-notification"
+        version="0.8.0dev">
+
+    <name>AssetsPicker</name>
+
+    <description>The purpose of the plugin is to create an platform independent javascript interface for Cordova based mobile applications to select multiple photos from album on iOS platform.</description>
+    <repo>https://github.com/donaldp24/cordova-plugin-assets-picker.git</repo>
+    <keywords>assets, assets picker, multiple selection, select photos, ios</keywords>
+    <license>Apache 2.0</license>
+
+    <author>Donald Pae</author>
+
+    <engines>
+        <engine name="cordova" version=">=3.0.0" />
+    </engines>
+
+    <js-module src="www/assets-picker.js" name="AssetsPickerPlugin">
+        <clobbers target="navigator.camera" />
+    </js-module>
+
+    <!-- ios -->
+    <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="AssetsPickerPlugin">
+                <param name="ios-package" value="AssetsPickerPlugin" onload="true" />
+		<param name="onload" value="true" />
+            </feature>
+        </config-file>
+
+	<!-- plugin header and source files -->
+        <header-file src="src/ios/CAssetsPickerPlugin.h" />
+        <source-file src="src/ios/CAssetsPickerPlugin.m" />
+
+	<!-- CTAssetsPickerController header and source files -->
+	<header-file src="src/ios/AssetsPicker/ALAsset+isEqual.h" />
+        <source-file src="src/ios/AssetsPicker/ALAsset+isEqual.m" />
+	<header-file src="src/ios/AssetsPicker/ALAssetsGroup+isEqual.h" />
+        <source-file src="src/ios/AssetsPicker/ALAssetsGroup+isEqual.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsGroupViewCell.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsGroupViewCell.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsGroupViewController.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsGroupViewController.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsPickerConstants.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsPickerConstants.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsPickerController.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsPickerController.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsSupplementaryView.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsSupplementaryView.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsViewCell.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsViewCell.m" />
+	<header-file src="src/ios/AssetsPicker/CTAssetsViewController.h" />
+        <source-file src="src/ios/AssetsPicker/CTAssetsViewController.m" />
+	<header-file src="src/ios/AssetsPicker/NSDate+timeDescription.h" />
+        <source-file src="src/ios/AssetsPicker/NSDate+timeDescription.m" />
+
+	<!-- CTAssetsPickerController resource files -->
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerChecked.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerChecked@2x.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerEmpty.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerEmpty@2x.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerLocked.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerLocked@2x.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerVideo.png" />
+	<resource-file src="src/ios/AssetsPicker/Resources/CTAssetsPickerVideo@2x.png" />
+	
+	<!-- system frameworks -->
+	<framework src="AssetsLibrary.framework" weak="true" />
+    </platform>
+
+</plugin>
