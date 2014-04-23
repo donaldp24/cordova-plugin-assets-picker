@@ -119,7 +119,7 @@ data : imageData	// image data, Base64 encoding of the image data, OR the image 
 
 #### Example
 ```javascript
-// Show image
+// Show selected images
 //
 function onSuccess(dataArray) {
     for (i = 0; i <= dataArray.length; i++) {
@@ -195,8 +195,10 @@ Camera.MediaType = {
 ```
 - correctOrientation: Rotate the image to correct for the orientation of the device during capture. (Boolean)
 - saveToPhotoAlbum: Save the image to the photo album on the device after capture. (Boolean)
-- popoverOptions: iOS only options to specify popover location in iPad. Defined in CameraPopoverOptions
+- popoverOptions: iOS only options to specify popover location in iPad. Defined in CameraPopoverOptions.
+
 #### CameraPopoverOptions
+
 Parameters only used by iOS to specify the anchor element location and arrow direction of popover used on iPad when selecting images from the library or album.
 ```javascript
 { x : 0, 
@@ -229,14 +231,18 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
 
  navigator.camera.getPicture(onSuccess, onCancel, options);
 
- function onSuccess(imageData) {
-    var image = document.getElementById('myImage');
-    image.src = "data:image/jpeg;base64," + imageData;
-}
+ function onSuccess(dataArray) {
+	for (i = 0; i <= dataArray.length; i++) {
+         var item = dataArray[i];
+         var imageId = item.id;
+         var image = document.getElementById('myImage' + i);
+         image.src = "data:image/jpeg;base64," + item.data;
+    }
+ }
 
-function onCancel(message) {
-    alert('Failed because: ' + message);
-}
+ function onCancel(message) {
+     alert('Failed because: ' + message);
+ }
 ```
 
 ## Examples
