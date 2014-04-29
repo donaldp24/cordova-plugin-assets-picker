@@ -1,7 +1,7 @@
 cordova-plugin-assets-picker
 ============================
 
-Phonegap Assets Picker Plugin, supports multiple selection of photos from album using [CTAssetsPickerController][ctassetspickercontroller].
+Phonegap Assets Picker Plugin, supports multiple selection of photos from album using [CTAssetsPickerController][ctassetspickercontroller]. API specs is following [cordova-plugin-local-notifications][cordova-plugin-local-notifications]
 
 ### Plugin's Purpose
 The purpose of the plugin is to create a fast and reliable view of photos on the mobile phones.
@@ -334,6 +334,7 @@ This software is released under the [Apache 2.0 License][apache2_license].
 © 2013-2014 appPlant UG, Inc. All rights reserved
 
 [ctassetspickercontroller]: https://github.com/chiunam/CTAssetsPickerController
+[cordova-plugin-local-notifications]: https://github.com/katzer/cordova-plugin-local-notifications
 [cordova]: https://cordova.apache.org
 [onsuccess]: #onSuccess
 [oncancel]: #onCancel
