@@ -1,5 +1,4 @@
-
-/**
+**
  Camera Options
  { quality : 75,
  destinationType : Camera.DestinationType.DATA_URL,
@@ -10,7 +9,7 @@
  targetHeight: 100,
  popoverOptions: CameraPopoverOptions,
  saveToPhotoAlbum: false
- selectedAssets: assetsArray,
+ overlay: {name: arryofIds},
  scrollToDate: currDate
  };
  */
@@ -22,6 +21,10 @@ cordova.define("cordova/plugin/AssetsPickerPlugin", function(require, exports, m
 
                     AssetsPickerPlugin.prototype.getPicture = function(success, failure, options) {
                         exec(success, failure, "CAssetsPickerPlugin", "getPicture", [options]);
+                    };
+               
+                    AssetsPickerPlugin.prototype.getById = function(id, success, failure, options) {
+                        exec(success, failure, "CAssetsPickerPlugin", "getById", [id, options]);
                     };
 
                     var myplugin = new AssetsPickerPlugin();
@@ -62,11 +65,15 @@ var PopoverArrowDirection = {
     ARROW_RIGHT : 8,
     ARROW_ANY : 15
 };
+   
+var Overlay = {
+    PREVIOUS_SELECTED : "previousSelected",
+    OVERLAY_SPECIAL : "overlaySpecial"
+};
 
 AssetsPickerPlugin.DestinationType = DestinationType;
 AssetsPickerPlugin.PictureSourceType = PictureSourceType;
 AssetsPickerPlugin.EncodingType = EncodingType;
 AssetsPickerPlugin.MediaType = MediaType;
 AssetsPickerPlugin.PopoverArrowDirection = PopoverArrowDirection;
-
-module.exports = AssetsPickerPlugin;
+AssetsPickerPlugin.Overlay = Overlay;

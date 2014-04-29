@@ -8,11 +8,18 @@
 
 #import "CAssetsPickerPlugin.h"
 
+
 @implementation CAssetsPickerPlugin {
-    int quality;
-    DestinationType destType;
-    EncodingType encodeType;
+    int _quality;
+    DestinationType _destType;
+    EncodingType _encodeType;
+    NSDictionary *_overlays;
+    NSDictionary *_overlayIcons;
+    NSURL *_assetURL;
 }
+
+
+#pragma  mark - Interfaces
 
 - (void)getPicture:(CDVInvokedUrlCommand *)command
 {
@@ -27,44 +34,19 @@
     self.picker.showsCancelButton    = (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad);
     self.picker.delegate             = self;
     
-    // default values
-    quality = 75;
-    destType = DestinationTypeFileURI;
-    encodeType = EncodingTypeJPEG;
-    
-    // get parameters from argument.
-    if (command.arguments.count >= 1)
+    [self initOptions];
+    if ([command.arguments count]> 0)
     {
         NSDictionary *jsonData = [command.arguments objectAtIndex:0];
-        
-        // quaility
-        NSString *obj = [jsonData objectForKey:@"quality"];
-        if (obj != nil)
-            quality = [obj intValue];
-        
-        // destination type
-        obj = [jsonData objectForKey:@"destinationType"];
-        if (obj != nil)
-        {
-            int destinationType = [obj intValue];
-            NSLog(@"destinationType = %d", destinationType);
-            destType = destinationType;
-        }
-        
-        // encoding type
-        obj = [jsonData objectForKey:@"encodingType"];
-        if (obj != nil)
-        {
-            int encodingType = [obj intValue];
-            encodeType = encodingType;
-        }
-        
-        // selected assets
-        NSArray *selectedAssetObjs = [jsonData objectForKey:@"selectedAssets"];
-        if (selectedAssetObjs != nil)
-            self.picker.selectedAssetObjs = [[NSMutableArray alloc] initWithArray:selectedAssetObjs];
+        [self getOptions:jsonData];
     }
-    //self.picker.selectedAssets       = [NSMutableArray arrayWithArray:selectedAssets];
+    
+    // set selected assets
+    NSArray *selectedAssetObjs = [_overlays objectForKey:kPreviousSelectedName];
+    if (selectedAssetObjs != nil)
+        self.picker.selectedAssetObjs = [[NSMutableArray alloc] initWithArray:selectedAssetObjs];
+    else
+        self.picker.selectedAssetObjs  = [[NSMutableArray alloc] init];
     
     // iPad
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad)
@@ -78,9 +60,215 @@
     {
         [self.viewController presentViewController:self.picker animated:YES completion:nil];
     }
+}
+
+- (void)getById:(CDVInvokedUrlCommand *)command
+{
+    self.hasPendingOperation = YES;
     
+    self.latestCommand = command;
+    
+    [self initOptions];
+    if ([command.arguments count] > 1)
+    {
+        // get id
+        NSString *url = [command.arguments objectAtIndex:0];
+        if (url != nil)
+            _assetURL = [NSURL URLWithString:url];
+
+        // get options
+        NSDictionary *jsonData = [command.arguments objectAtIndex:1];
+        [self getOptions:jsonData];
+        
+    }
+    
+    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
+    [library assetForURL:_assetURL resultBlock:^(ALAsset *asset) {
+        
+        // Unset the self.hasPendingOperation property
+        self.hasPendingOperation = NO;
+        
+        CDVPluginResult *pluginResult = nil;
+        NSString *resultJS = nil;
+        
+        NSDictionary *retValues = [self objectFromAsset:asset fromThumbnail:NO];
+        
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:retValues];
+        resultJS = [pluginResult toSuccessCallbackString:command.callbackId];
+        [self writeJavascript:resultJS];
+        
+        //
+    } failureBlock:^(NSError *error) {
+        
+        // Unset the self.hasPendingOperation property
+        self.hasPendingOperation = NO;
+        
+        CDVPluginResult *pluginResult = nil;
+        NSString *resultJS = nil;
+        
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:[error localizedDescription]];
+        
+        resultJS = [pluginResult toErrorCallbackString:command.callbackId];
+        [self writeJavascript:resultJS];
+        
+    }];
+}
+
+
+#pragma mark - Utility Functions
+- (void)initOptions
+{
+    // default values
+    _quality = 75;
+    _destType = DestinationTypeFileURI;
+    _encodeType = EncodingTypeJPEG;
+    _overlayIcons = [[NSMutableDictionary alloc] init];
+    _overlays = [[NSMutableDictionary alloc] init];
+}
+
+- (void)getOptions: (NSDictionary *)jsonData
+{
+    // get parameters from argument.
+ 
+    // quaility
+    NSString *obj = [jsonData objectForKey:kQualityKey];
+    if (obj != nil)
+        _quality = [obj intValue];
+    
+    // destination type
+    obj = [jsonData objectForKey:kDestinationTypeKey];
+    if (obj != nil)
+    {
+        int destinationType = [obj intValue];
+        NSLog(@"destinationType = %d", destinationType);
+        _destType = destinationType;
+    }
+    
+    // encoding type
+    obj = [jsonData objectForKey:kEncodingTypeKey];
+    if (obj != nil)
+    {
+        int encodingType = [obj intValue];
+        _encodeType = encodingType;
+    }
+    
+    // overlay
+    NSDictionary *overlay = [jsonData objectForKey:kOverlayKey];
+    if (overlay != nil)
+    {
+        NSArray *keys = [overlay allKeys];
+        for (int i = 0; i < [keys count]; i++) {
+            NSString *key = [keys objectAtIndex:i];
+            NSArray *value = [overlay objectForKey:key];
+            // for debug
+            /*
+            for (int j = 0; j < [value count]; j++)
+            {
+                NSString *url = [value objectAtIndex:j];
+                url = url;
+            }
+             */
+            [_overlays setValue:value forKey:key];
+        }
+    }
     
 }
+
+- (NSDictionary *)objectFromAsset:(ALAsset *)asset fromThumbnail:(BOOL)fromThumbnail
+{
+    NSMutableDictionary* retValues = [NSMutableDictionary dictionaryWithCapacity:3];
+    NSString *strUrl = [NSString stringWithFormat:@"%@", [[asset valueForProperty:ALAssetPropertyAssetURL] absoluteString] ];
+    // obj.id
+    [retValues setObject:strUrl forKey:@"id"];
+    
+    // obj.data
+    if (_destType == DestinationTypeDataURL) {
+        NSString *strEncoded = @"";
+        NSData *data = nil;
+        if (_encodeType == EncodingTypeJPEG)
+        {
+            if (fromThumbnail)
+            {
+                data = UIImageJPEGRepresentation([UIImage imageWithCGImage:asset.thumbnail], _quality / 100.0f);
+            }
+            else
+            {
+                data = UIImageJPEGRepresentation([UIImage imageWithCGImage:[asset.defaultRepresentation fullResolutionImage]], _quality / 100.0f);
+            }
+        }
+        else
+        {
+            if (fromThumbnail)
+            {
+                data = UIImagePNGRepresentation([UIImage imageWithCGImage:[asset.defaultRepresentation fullResolutionImage]]);
+            }
+            else
+            {
+                data = UIImagePNGRepresentation([UIImage imageWithCGImage:asset.thumbnail]);
+            }
+        }
+        strEncoded = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+        
+        [retValues setObject:strEncoded forKey:@"data"];
+    }
+    else {
+        //[retValues setObject:[asset valueForProperty:ALAssetPropertyAssetURL] forKey:@"data"];
+        [retValues setObject:strUrl forKey:@"data"];
+    }
+    
+    // obj.exif
+    NSMutableDictionary *exif = [NSMutableDictionary dictionaryWithCapacity:4];
+    
+    // obj.exif.DateTimeOriginal
+    NSDate *date = [asset valueForProperty:ALAssetPropertyDate];
+    if (date != nil)
+    {
+        [exif setObject:@"" forKey:kDateTimeOriginalKey];
+    }
+    else
+    {
+        [exif setObject:[CAssetsPickerPlugin date2str:date withFormat:DATETIME_FORMAT] forKey:kDateTimeOriginalKey];
+    }
+    
+    //obj.exif.PixelXDimension
+    //obj.exif.PixelYDimension
+    if (_destType == DestinationTypeDataURL)
+    {
+        //
+        if (asset.defaultRepresentation != nil)
+        {
+            [exif setObject:@(asset.defaultRepresentation.dimensions.width) forKey:kPixelXDimensionKey];
+            [exif setObject:@(asset.defaultRepresentation.dimensions.height) forKey:kPixelYDimensionKey];
+        }
+        else
+        {
+            [exif setObject:@(0) forKey:kPixelXDimensionKey];
+            [exif setObject:@(0) forKey:kPixelYDimensionKey];
+        }
+    }
+    else
+    {
+        if (asset.defaultRepresentation != nil)
+        {
+            [exif setObject:@(asset.defaultRepresentation.dimensions.width) forKey:kPixelXDimensionKey];
+            [exif setObject:@(asset.defaultRepresentation.dimensions.height) forKey:kPixelYDimensionKey];
+        }
+        else
+        {
+            [exif setObject:@(0) forKey:kPixelXDimensionKey];
+            [exif setObject:@(0) forKey:kPixelYDimensionKey];
+        }
+    }
+    
+    //obj.exif.Orientation
+    [exif setObject:[asset valueForProperty:ALAssetPropertyOrientation] forKey:kOrientationKey];
+    
+    [retValues setObject:exif forKey:kExifKey];
+    
+    return retValues;
+}
+
+
 #pragma mark - Assets Picker Delegate
 
 /**
@@ -103,34 +291,11 @@
     NSString *resultJS = nil;
     
     // make array of return objects
-    // { id : asset's url,
-    //   data : asset's data }
     NSMutableArray *retArray = [[NSMutableArray alloc] init];
     for (int i = 0; i < assets.count; i++)
     {
         ALAsset *asset = [assets objectAtIndex:i];
-        
-        NSMutableDictionary* retValues = [NSMutableDictionary dictionaryWithCapacity:2];
-        NSString *strUrl = [NSString stringWithFormat:@"%@", [[asset valueForProperty:ALAssetPropertyAssetURL] absoluteString] ];
-        [retValues setObject:strUrl forKey:@"id"];
-        if (destType == DestinationTypeDataURL) {
-            NSString *strEncoded = @"";
-            NSData *data = nil;
-            if (encodeType == EncodingTypeJPEG)
-                //data = UIImageJPEGRepresentation([UIImage imageWithCGImage:[asset.defaultRepresentation fullResolutionImage]], quality / 100.0f);
-                data = UIImageJPEGRepresentation([UIImage imageWithCGImage:asset.thumbnail], quality / 100.0f);
-            else
-                //data = UIImagePNGRepresentation([UIImage imageWithCGImage:[asset.defaultRepresentation fullResolutionImage]]);
-                data = UIImagePNGRepresentation([UIImage imageWithCGImage:asset.thumbnail]);
-            strEncoded = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
-            
-            [retValues setObject:strEncoded forKey:@"data"];
-        }
-        else {
-            //[retValues setObject:[asset valueForProperty:ALAssetPropertyAssetURL] forKey:@"data"];
-            [retValues setObject:strUrl forKey:@"data"];
-        }
-        
+        NSDictionary *retValues = [self objectFromAsset:asset fromThumbnail:YES];
         [retArray addObject:retValues];
     }
     
@@ -215,4 +380,16 @@
 {
     self.popover = nil;
 }
+
+#pragma mark - Common Function
+
++ (NSString *)date2str:(NSDate *)convertDate withFormat:(NSString *)formatString
+{
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:formatString];
+    
+    return [dateFormatter stringFromDate:convertDate];
+}
+
+
 @end

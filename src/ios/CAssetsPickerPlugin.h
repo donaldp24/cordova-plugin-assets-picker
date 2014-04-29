@@ -19,6 +19,26 @@ typedef enum {
     EncodingTypePNG = 1
 }EncodingType;
 
+// return value
+#define kIdKey      @"id"
+#define kDataKey    @"data"
+#define kExifKey    @"exif"
+#define kDateTimeOriginalKey    @"DateTimeOriginal"
+#define kPixelXDimensionKey      @"PixelXDimension"
+#define kPixelYDimensionKey     @"PixelYDimension"
+#define kOrientationKey         @"Orientation"
+
+#define DATETIME_FORMAT @"yyyy-MM-dd HH:mm:ss"
+
+// parameter
+#define kQualityKey         @"quality"
+#define kDestinationTypeKey @"destinationType"
+#define kEncodingTypeKey    @"encodingType"
+#define kOverlayKey         @"overlay"
+
+#define kPreviousSelectedName   @"previousSelected"
+
+
 @interface CAssetsPickerPlugin : CDVPlugin <UINavigationControllerDelegate, CTAssetsPickerControllerDelegate, UIPopoverControllerDelegate>
 
 @property (strong, nonatomic) CTAssetsPickerController *picker;
@@ -27,5 +47,9 @@ typedef enum {
 @property (nonatomic, strong) UIPopoverController *popover;
 
 - (void)getPicture:(CDVInvokedUrlCommand *)command;
+- (void)getById:(CDVInvokedUrlCommand *)command;
+
+
++ (NSString *)date2str:(NSDate *)convertDate withFormat:(NSString *)formatString;
 
 @end

@@ -78,8 +78,7 @@ NSString * const CTAssetsPickerSelectedAssetsChangedNotification = @"CTAssetsPic
     
     for (int i = 0; i < self.selectedAssetObjs.count; i++)
     {
-        NSDictionary *dicAssetObj = [self.selectedAssetObjs objectAtIndex:i];
-        NSString *url = [dicAssetObj objectForKey:@"id"];
+        NSString *url = [self.selectedAssetObjs objectAtIndex:i];
         [[CTAssetsPickerController defaultAssetsLibrary] assetForURL:[NSURL URLWithString:url] resultBlock:^(ALAsset *asset) {
             [self performSelector:@selector(selectAsset:) withObject:asset afterDelay:NO];
         } failureBlock:^(NSError *error) {
