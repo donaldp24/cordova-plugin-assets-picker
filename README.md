@@ -234,8 +234,8 @@ exif : {
 // Show selected images
 //
 function onGetById(imageData) {
-    var image = document.getElementById(data.id);
-    image.src = "data:image/jpeg;base64," + data.data;
+    var image = document.getElementById(imageData.id);
+    image.src = "data:image/jpeg;base64," + imageData.data;
 }
 ```
 
@@ -334,7 +334,7 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
 	for (i = 0; i <= dataArray.length; i++) {
          var item = dataArray[i];
          var imageId = item.id;
-         var image = document.getElementById('myImage' + i);
+         var image = document.getElementById(imageId);
          image.src = "data:image/jpeg;base64," + item.data;
     }
  }
