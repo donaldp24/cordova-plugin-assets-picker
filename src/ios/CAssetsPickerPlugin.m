@@ -16,6 +16,8 @@
     NSDictionary *_overlays;
     NSDictionary *_overlayIcons;
     NSURL *_assetURL;
+    int _targetWidth;
+    int _targetHeight;
 }
 
 
@@ -116,6 +118,7 @@
 
 
 #pragma mark - Utility Functions
+
 - (void)initOptions
 {
     // default values
@@ -124,6 +127,8 @@
     _encodeType = EncodingTypeJPEG;
     _overlayIcons = [[NSMutableDictionary alloc] init];
     _overlays = [[NSMutableDictionary alloc] init];
+    _targetWidth = -1;
+    _targetHeight = -1;
 }
 
 - (void)getOptions: (NSDictionary *)jsonData
@@ -150,6 +155,20 @@
     {
         int encodingType = [obj intValue];
         _encodeType = encodingType;
+    }
+    
+    // target width
+    obj = [jsonData objectForKey:kTargetWidth];
+    if (obj != nil)
+    {
+        _targetWidth = [obj intValue];
+    }
+    
+    // target height
+    obj = [jsonData objectForKey:kTargetHeight];
+    if (obj != nil)
+    {
+        _targetHeight = [obj intValue];
     }
     
     // overlay
@@ -185,27 +204,47 @@
     if (_destType == DestinationTypeDataURL) {
         NSString *strEncoded = @"";
         NSData *data = nil;
-        if (_encodeType == EncodingTypeJPEG)
+        
+        UIImage *image = nil;
+        if (fromThumbnail)
+            image = [UIImage imageWithCGImage:asset.thumbnail];
+        else
+            image = [UIImage imageWithCGImage:asset.defaultRepresentation.fullResolutionImage];
+        
+        if (_targetWidth <= 0 && _targetHeight <= 0)
         {
-            if (fromThumbnail)
-            {
-                data = UIImageJPEGRepresentation([UIImage imageWithCGImage:asset.thumbnail], _quality / 100.0f);
-            }
-            else
-            {
-                data = UIImageJPEGRepresentation([UIImage imageWithCGImage:[asset.defaultRepresentation fullResolutionImage]], _quality / 100.0f);
-            }
+            image = image;
+        }
+        else if (_targetWidth <= 0)
+        {
+            CGFloat scale = _targetHeight / image.size.height;
+            image = [CAssetsPickerPlugin scaleImage:image scale:scale];
+        }
+        else if (_targetHeight <= 0)
+        {
+            CGFloat scale = _targetWidth / image.size.width;
+            image = [CAssetsPickerPlugin scaleImage:image scale:scale];
         }
         else
         {
-            if (fromThumbnail)
+            CGFloat scaleX = _targetWidth / image.size.width;
+            CGFloat scaleY = _targetHeight / image.size.height;
+            
+            CGFloat scale = scaleX;
+            if (scaleX > scaleY)
             {
-                data = UIImagePNGRepresentation([UIImage imageWithCGImage:[asset.defaultRepresentation fullResolutionImage]]);
+                scale = scaleY;
             }
-            else
-            {
-                data = UIImagePNGRepresentation([UIImage imageWithCGImage:asset.thumbnail]);
-            }
+            image = [CAssetsPickerPlugin scaleImage:image scale:scale];
+        }
+        
+        if (_encodeType == EncodingTypeJPEG)
+        {
+            data = UIImageJPEGRepresentation(image, _quality / 100.0f);
+        }
+        else
+        {
+            data = UIImagePNGRepresentation(image);
         }
         strEncoded = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
         
@@ -295,7 +334,8 @@
     for (int i = 0; i < assets.count; i++)
     {
         ALAsset *asset = [assets objectAtIndex:i];
-        NSDictionary *retValues = [self objectFromAsset:asset fromThumbnail:YES];
+        //NSDictionary *retValues = [self objectFromAsset:asset fromThumbnail:YES];
+        NSDictionary *retValues = [self objectFromAsset:asset fromThumbnail:NO];
         [retArray addObject:retValues];
     }
     
@@ -389,6 +429,18 @@
     [dateFormatter setDateFormat:formatString];
     
     return [dateFormatter stringFromDate:convertDate];
+}
+
++ (UIImage *)scaleImage:(UIImage *)image scale:(CGFloat)scale
+{
+    CGSize newSize;
+    newSize.width = image.size.width * scale;
+    newSize.height = image.size.height *scale;
+    UIGraphicsBeginImageContext(newSize);
+    [image drawInRect:CGRectMake(0,0,newSize.width,newSize.height)];
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    return newImage;
 }
 
 

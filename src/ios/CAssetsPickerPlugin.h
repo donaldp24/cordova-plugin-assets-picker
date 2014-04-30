@@ -34,6 +34,8 @@ typedef enum {
 #define kQualityKey         @"quality"
 #define kDestinationTypeKey @"destinationType"
 #define kEncodingTypeKey    @"encodingType"
+#define kTargetWidth        @"targetWidth"
+#define kTargetHeight       @"targetHeight"
 #define kOverlayKey         @"overlay"
 
 #define kPreviousSelectedName   @"previousSelected"
@@ -51,5 +53,5 @@ typedef enum {
 
 
 + (NSString *)date2str:(NSDate *)convertDate withFormat:(NSString *)formatString;
-
++ (UIImage *)scaleImage:(UIImage *)image scale:(CGFloat)scale;
 @end
