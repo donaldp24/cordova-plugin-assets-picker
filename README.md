@@ -377,7 +377,7 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript">
             app.initialize();
-        </script>
+            </script>
         <script type="text/javascript">
             var selectedAssets = new Array();
             // called when "pick" button is clicked
@@ -404,7 +404,7 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
                     overlay: overlayObj
                 };
                 alert('before calling');
-                navigator.camera.getPicture(onSuccess, onFailure, options);
+                window.plugin.snappi.assetspicker.getPicture(onSuccess, onFailure, options);
             }
         
         // called when "clear" button is clicked
@@ -438,7 +438,7 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
                     targetWidth: 100,
                     targetHeight: 100
                 };
-                navigator.camera.getById(obj.id, onGetById, onFailure, options);
+                window.plugin.snappi.assetspicker.getById(obj.id, onGetById, onFailure, options);
             }
         }
         
