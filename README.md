@@ -98,6 +98,7 @@ identifier string of selected photo.
 The data of image is one of the following formats, depending on the options you specify:
 - A String containing the Base64 encoded photo image.
 - A String representing the image file location on local storage (default).
+
 ##### exif
 - DateTimeOriginal : datetime when the image was taken. formatted as "yyyy-MM-dd HH:mm:ss" ("2014-01-31 11:02:59")
 - PixelXDimension : width (pixels) of the image.
