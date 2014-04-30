@@ -403,8 +403,8 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
                     targetHeight: 100,
                     overlay: overlayObj
                 };
-                
-                window.plugin.snappi.assetspicker.getPicture(onSuccess, onFailure, options);
+
+                window.plugin.snappi.assetspicker.getPicture(onSuccess, onCancel, options);
             }
         
         // called when "clear" button is clicked
@@ -438,12 +438,12 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
                     targetWidth: 100,
                     targetHeight: 100
                 };
-                window.plugin.snappi.assetspicker.getById(obj.id, onGetById, onFailure, options);
+                window.plugin.snappi.assetspicker.getById(obj.id, onGetById, onCancel, options);
             }
         }
         
         // cancel callback
-        function onFailure(message)
+        function onCancel(message)
         {
             //alert(message);
         }
