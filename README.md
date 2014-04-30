@@ -120,13 +120,13 @@ function pickPictures()
 ```
 
 ### getById
-Retrieve a photo from the device's album.<br>
+Retrieve a photo with AssetsId.<br>
 
 ```javascript
 window.plugin.snappi.assetspicker.getById(AssetId, [onGetById][ongetbyid], [onCancel][oncancel], [options][options]);
 ```
 
-This function gets a Assets with [AssetsId][assetsid].
+This function gets a Assets with AssetsId.
 The return picture will be sent to the [onGetById][ongetbyid] function, returned picture is a dictionary value as following formats;
 ```javascript
 {
@@ -207,6 +207,37 @@ function(message) {
 #### Parameters
 - message: The message is provided by the device. (String)
 
+
+### onGetById
+onGetById callback function that provide the selected image.
+```javascript
+function(imageData) {
+    // Do something with the image
+}
+```
+#### Parameters
+- imageData: image data of selected image, just like an item of returned array on [onSucess][onsuccess] callback.
+```javascript
+{
+id : identifier,	// unique identifier string of the image
+data : imageData,	// image data, Base64 encoding of the image data, OR the image file URI, depending on options used. (String)
+exif : {
+    DateTimeOriginal : dateTimeOriginal, 	// datetime when the image was taken
+    PixelXDimension : pixelXDimension,		// width (pixels) of the image
+    PixelYDimension : pixelYDimension,		// height (pixels) of the image
+    Orientation : orientation			// orientation number
+};
+```
+
+#### Example
+```javascript
+// Show selected images
+//
+function onGetById(imageData) {
+    var image = document.getElementById(data.id);
+    image.src = "data:image/jpeg;base64," + data.data;
+}
+```
 
 ### options
 Optional parameters to customize the settings.
@@ -326,60 +357,103 @@ Parameters only used by iOS to specify the anchor element location and arrow dir
         <title>Assets Picker Plugin</title>
     </head>
     <body>
-        <input type="button" value="Pick" onclick="onPick()" />
-        <input type="button" value="Clear" onclick="onClear()" />
-        <table id="imagetable">
-        </table>
+        <div class="app">
+            <h1>Apache Cordova</h1>
+            <div id="deviceready" class="blink">
+                <p class="event listening">Connecting to Device</p>
+                <p class="event received">Device is Ready</p>
+            </div>
+        </div>
+        <div style="position:absolute;left:0%;top:0%">
+            <table id="imagetable">
+            </table>
+        </div>
+        <div style="position:absolute;left:20%;top:50%">
+            <input type="button" value="Pick" onclick="onPick()" style="width:100px;height=80px"/>
+            <input type="button" value="Clear" onclick="onClear()" style="width:100px;height=80px"/>
+        </div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript">
             app.initialize();
         </script>
-		<script type="text/javascript">
-			var selectedAssets = new Array();
-			// called when "pick" button is clicked
-			function onPick()
-			{
-				var options = {
-					quality: 75,
-					destinationType: Camera.DestinationType.DATA_URL,
-					encodingType: Camera.EncodingType.JPEG,
-					selectedAssets: selectedAssets
-				};
-				navigator.camera.getPicture(onSuccess, onFailure, options);
-			}
-
-			// called when "clear" button is clicked
-			function onClear()
-			{
-				selectedAssets = new Array();
-				document.getElementById("imagetable").innerHTML = "";
-			}
-
-			// success callback
-			function onSuccess(dataArray)
-			{
-				selectedAssets = dataArray;
-				var strTr = "";
-				for (i = 0; i < selectedAssets.length; i++)
-				{
-					strTr += "<tr><td><img id='img" + i + "' /></td></tr>";
-				}
-				document.getElementById("imagetable").innerHTML = strTr;
-				for (i = 0; i < selectedAssets.length; i++)
-				{
-					var obj = selectedAssets[i];
-					var image = document.getElementById("img"+i);
-					image.src = "data:image/jpeg;base64," + obj.data;
-				}
-			}
-
-			// cancel callback
-			function onFailure(message)
-			{
-				//alert(message);
-			}
-		</script>
+        <script type="text/javascript">
+            var selectedAssets = new Array();
+            // called when "pick" button is clicked
+            function onPick()
+            {
+                var assetsIds = new Array();
+                if (selectedAssets != null && selectedAssets.length != 0)
+                {
+                    for (var i = 0; i < selectedAssets.length; i++)
+                    {
+                        assetsIds[i] = selectedAssets[i].id;
+                    }
+                }
+                var overlayObj = {};
+                
+                overlayObj[Camera.Overlay.PREVIOUS_SELECTED] = assetsIds;
+                
+                var options = {
+                    quality: 75,
+                    destinationType: Camera.DestinationType.FILE_URI,
+                    encodingType: Camera.EncodingType.JPEG,
+                    targetWidth: 100,
+                    targetHeight: 100,
+                    overlay: overlayObj
+                };
+                alert('before calling');
+                navigator.camera.getPicture(onSuccess, onFailure, options);
+            }
+        
+        // called when "clear" button is clicked
+        function onClear()
+        {
+            selectedAssets = new Array();
+            document.getElementById("imagetable").innerHTML = "";
+        }
+        
+        // success callback
+        function onSuccess(dataArray)
+        {
+            selectedAssets = dataArray;
+            var strTr = "";
+            for (i = 0; i < selectedAssets.length; i++)
+            {
+                var obj = selectedAssets[i];
+                strTr += "<tr><td><img id='" + obj.id + "' /></td><td>" + obj.exif.PixelXDimension + " x " + obj.exif.PixelYDimension + " : " + obj.exif.Orientation + "</td></tr>";
+            }
+            document.getElementById("imagetable").innerHTML = strTr;
+            for (i = 0; i < selectedAssets.length; i++)
+            {
+                var obj = selectedAssets[i];
+                //var image = document.getElementById(obj.id);
+                //image.src = "data:image/jpeg;base64," + obj.data;
+                
+                var options = {
+                    quality: 75,
+                    destinationType: Camera.DestinationType.DATA_URL,
+                    encodingType: Camera.EncodingType.JPEG,
+                    targetWidth: 100,
+                    targetHeight: 100
+                };
+                navigator.camera.getById(obj.id, onGetById, onFailure, options);
+            }
+        }
+        
+        // cancel callback
+        function onFailure(message)
+        {
+            //alert(message);
+        }
+        
+        // getById success callback
+        function onGetById(data)
+        {
+            var image = document.getElementById(data.id);
+            image.src = "data:image/jpeg;base64," + data.data;
+        }
+        </script>
     </body>
 </html>
 ```
@@ -405,6 +479,7 @@ This software is released under the [Apache 2.0 License][apache2_license].
 [onsuccess]: #onSuccess
 [oncancel]: #onCancel
 [options]: #options
+[ongetbyid]: #onGetById
 [CLI]: http://cordova.apache.org/docs/en/3.0.0/guide_cli_index.md.html#The%20Command-line%20Interface
 [PGB]: http://docs.build.phonegap.com/en_US/3.3.0/index.html
 [apache2_license]: http://opensource.org/licenses/Apache-2.0
