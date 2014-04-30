@@ -19,7 +19,7 @@
 
     <js-module src="www/assets-picker.js" name="AssetsPickerPlugin">
         <clobbers target="plugin.snappi.assetspicker" />
-		<clobbers target="Camera" />
+        <clobbers target="Camera" />
     </js-module>
 
     <!-- ios -->
