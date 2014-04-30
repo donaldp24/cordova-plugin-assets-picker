@@ -42,34 +42,40 @@ Add the following xml to your config.xml to always use the latest version of thi
 ```
 or to use an specific version:
 ```xml
-<gap:plugin name="com.michael.cordova.plugin.assets-picker" version="0.8.0" />
+<gap:plugin name="com.michael.cordova.plugin.assets-picker" version="0.8.1" />
 ```
 More informations can be found [here][PGB_plugin].
 
 
 ## ChangeLog
+
+#### Version 0.8.1 (not yet released)
+- [feature:] added FILE_URI feature
+- [feature:] added getById function
+- [enhanced:] changed parameter "selectedAssets" of options to "overlay"
+
 #### Version 0.8.0 (not yet released)
 - [feature:] Create plugin
 
 
 ## Using the plugin
-The plugin creates the object ```navigator.camera``` with the following methods:
+The plugin creates the object ```window.plugin.snappi.assetspicker``` with the following methods:
 
 ### Plugin initialization
 The plugin and its methods are not available before the *deviceready* event has been fired.
 
 ```javascript
 document.addEventListener('deviceready', function () {
-    // navigator.camera is now available
+    // window.plugin.snappi.assetspicker is now available
 }, false);
 ```
 
 ### getPicture
 Retrieves multiple photos from the device's album.<br>
-Selected images are returned as an array of identifiers of images and base64 encoded Strings or as an array of identifiers and the URIs of image files.<br>
+Selected images are returned as an array of identifiers of image, image data (or URIs) and exif of image files.<br>
 
 ```javascript
-navigator.camera.getPicture([onSuccess][onsuccess], [onCancel][oncancel], [options][options]);
+window.plugin.snappi.assetspicker.getPicture([onSuccess][onsuccess], [onCancel][oncancel], [options][options]);
 ```
 
 This function opens photo chooser dialog, from which multiple photos from the album can be selected.
@@ -77,7 +83,12 @@ The return array will be sent to the [onSuccess][onsuccess] function, each item 
 ```javascript
 {
 id : identifier,
-data : imageData
+data : imageData,
+exif : {
+    DateTimeOriginal : dateTimeOriginal,
+    PixelXDimension : pixelXDimension,
+    PixelYDimension : pixelYDimension,
+    Orientation : orientation
 };
 ```
 
@@ -87,19 +98,66 @@ identifier string of selected photo.
 The data of image is one of the following formats, depending on the options you specify:
 - A String containing the Base64 encoded photo image.
 - A String representing the image file location on local storage (default).
+##### exif
+- DateTimeOriginal : datetime when the image was taken. formatted as "yyyy-MM-dd HH:mm:ss" ("2014-01-31 11:02:59")
+- PixelXDimension : width (pixels) of the image.
+- PixelYDimension : height (pixels) of the image.
+- Orientation : The key to retrieve the orientation of the asset. The corresponding value is an number containing an asset's orientation as described by the TIFF format.
 
 #### Example
 ```javascript
-function onPick()
+function pickPictures()
 {
-	var options = {
+    var options = {
         quality: 75,
         destinationType: Camera.DestinationType.DATA_URL,
-        encodingType: Camera.EncodingType.JPEG
+        encodingType: Camera.EncodingType.JPEG,
+        targetWidth: 100,
+        targetHeight: 100
     };
-    navigator.camera.getPicture(onSuccess, onFailure, options);
+    window.plugin.snappi.assetspicker.getPicture(onSuccess, onCancel, options);
 }
 ```
+
+### getById
+Retrieve a photo from the device's album.<br>
+
+```javascript
+window.plugin.snappi.assetspicker.getById(AssetId, [onGetById][ongetbyid], [onCancel][oncancel], [options][options]);
+```
+
+This function gets a Assets with [AssetsId][assetsid].
+The return picture will be sent to the [onGetById][ongetbyid] function, returned picture is a dictionary value as following formats;
+```javascript
+{
+id : identifier,
+data : imageData,
+exif : {
+    DateTimeOriginal : dateTimeOriginal,
+    PixelXDimension : pixelXDimension,
+    PixelYDimension : pixelYDimension,
+    Orientation : orientation
+};
+```
+
+##### Parameters
+Same as an item of returned array on [onSuccess][onsuccess] callback.
+
+#### Example
+```javascript
+function getAPictureWithId(AssetId)
+{
+    var options = {
+        quality: 75,
+        destinationType: Camera.DestinationType.DATA_URL,
+        encodingType: Camera.EncodingType.JPEG,
+        targetWidth: 100,
+        targetHeight: 100
+    };
+    window.plugin.snappi.assetspicker.getById(AssetId, onGetById, onCancel, options);
+}
+```
+
 
 ### onSuccess
 onSuccess callback function that provides the selected images.
@@ -109,11 +167,16 @@ function(dataArray) {
 }
 ```
 #### Parameters
-- dataArray: array of image with identifier and image data, 
+- dataArray: array of image with identifier and image data
 ```javascript
 {
 id : identifier,	// unique identifier string of the image
-data : imageData	// image data, Base64 encoding of the image data, OR the image file URI, depending on options used. (String)
+data : imageData,	// image data, Base64 encoding of the image data, OR the image file URI, depending on options used. (String)
+exif : {
+    DateTimeOriginal : dateTimeOriginal, 	// datetime when the image was taken
+    PixelXDimension : pixelXDimension,		// width (pixels) of the image
+    PixelYDimension : pixelYDimension,		// height (pixels) of the image
+    Orientation : orientation			// orientation number
 };
 ```
 
@@ -125,8 +188,9 @@ function onSuccess(dataArray) {
     for (i = 0; i <= dataArray.length; i++) {
          var item = dataArray[i];
          var imageId = item.id;
-         var image = document.getElementById('myImage' + i);
-         image.src = "data:image/jpeg;base64," + item.data;
+         
+         // get picture by Id
+         window.plugin.snappi.assetspicker.getById(item.id, onGetById, onCancel, options);
     }
 }
 ```
@@ -137,6 +201,7 @@ onCancel callback function that provides a cancel or error message.
 ```javascript
 function(message) {
     // Show a helpful message
+    alert(message);
 }
 ```
 #### Parameters
@@ -156,18 +221,19 @@ Optional parameters to customize the settings.
   popoverOptions: CameraPopoverOptions,
   saveToPhotoAlbum: false,
   scrollToDate: new Date(),
-  selectedAssets: dataArray	};
+  overlay: {overlayName: AssetsIdsArray}
+  };
 ```
 
 - quality: Quality of saved image. Range is [0, 100]. (Number)
-- destinationType: Choose the format of the return value. Defined in navigator.camera.DestinationType (Number)
+- destinationType: Choose the format of the return value. Defined in Camera.DestinationType (Number)
 ```javascript
     Camera.DestinationType = {
         DATA_URL : 0,                // Return image as base64 encoded string
         FILE_URI : 1                 // Return image file URI
     };
 ```
-- sourceType: Set the source of the picture. Defined in nagivator.camera.PictureSourceType (Number)
+- sourceType: Set the source of the picture. Defined in Camera.PictureSourceType (Number)
 ```javascript
 Camera.PictureSourceType = {
     PHOTOLIBRARY : 0,
@@ -176,15 +242,15 @@ Camera.PictureSourceType = {
 };
 ```
 - allowEdit: Allow simple editing of image before selection. (Boolean)
-- encodingType: Choose the encoding of the returned image file. Defined in navigator.camera.EncodingType (Number)
+- encodingType: Choose the encoding of the returned image file. Defined in Camera.EncodingType (Number)
 ```javascript
     Camera.EncodingType = {
         JPEG : 0,               // Return JPEG encoded image
         PNG : 1                 // Return PNG encoded image
     };
 ```
-- targetWidth: Width in pixels to scale image. Must be used with targetHeight. Aspect ratio is maintained. (Number)
-- targetHeight: Height in pixels to scale image. Must be used with targetWidth. Aspect ratio is maintained. (Number)
+- targetWidth: Width in pixels to scale image. Could be used with targetHeight. Aspect ratio is keeped. (Number)
+- targetHeight: Height in pixels to scale image. Could be used with targetWidth. Aspect ratio is keeped. (Number)
 - mediaType: Set the type of media to select from. Only works when PictureSourceType is PHOTOLIBRARY or SAVEDPHOTOALBUM. Defined in nagivator.camera.MediaType (Number)
 ```javascript
 Camera.MediaType = { 
@@ -196,7 +262,7 @@ Camera.MediaType = {
 - correctOrientation: Rotate the image to correct for the orientation of the device during capture. (Boolean)
 - saveToPhotoAlbum: Save the image to the photo album on the device after capture. (Boolean)
 - scrollToDate: Scroll to indicated date when open photo chooser dialog.
-- selectedAssets: Array of selected images, select these images when open photo chooser dialog. Selected images was returned [onSuccess][onsuccess] callback. 
+- overlay: Array of IDs of images to be with overlay. Show overlay icons on these images when open photo chooser dialog. IDs could be returned [onSuccess][onsuccess] callback. 
 - popoverOptions: iOS only options to specify popover location in iPad. Defined in CameraPopoverOptions.
 
 #### CameraPopoverOptions
