@@ -1,4 +1,3 @@
-cordova.define("com.michael.cordova.plugin.assets-picker.AssetsPickerPlugin", function(require, exports, module) {
 /**
  Camera Options
  { quality : 75,
@@ -79,4 +78,4 @@ AssetsPickerPlugin.MediaType = MediaType;
 AssetsPickerPlugin.PopoverArrowDirection = PopoverArrowDirection;
 AssetsPickerPlugin.Overlay = Overlay;
 
-module.exports = AssetsPickerPlugin;});
+module.exports = AssetsPickerPlugin;
